@@ -1,0 +1,42 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <div x-data="searchData">
+      <input type="text" x-model="search"
+        class="bg-gray-50 border p-2 border-gray-200 text-gray-900 text-sm rounded focus:border-gray-400 focus:outline-none"
+        placeholder="Search...">
+
+      <ul class="mt-4">
+        <template x-for="item in filteredItems" :key="item">
+          <li>
+            <p x-text="item"></p>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    const searchData = {
+      search: '',
+      items: ['foo', 'bar', 'baz'],
+      get filteredItems() {
+        return this.items.filter(i => i.startsWith(this.search))
+      }
+    }
+  </script>
+</body>
+
+</html>

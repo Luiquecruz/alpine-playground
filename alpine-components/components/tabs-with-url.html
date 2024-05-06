@@ -1,0 +1,71 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <section x-data="tabsContent">
+      <div x-data="{ activeTab: initialData }"
+        x-init="activeTab = window.location.hash ? window.location.hash.replace('#', '') : initialData">
+        <ul class="flex flex-wrap gap-4">
+          <template x-for="tab in tabsData" :key="tab.title">
+            <li>
+              <a @click="activeTab = tab.title" :href="`#${formatUrl(tab.title)}`"
+                class="px-4 py-2 bg-gray-100 text-sm rounded hover:bg-gray-200"
+                :class="{ 'bg-gray-300': activeTab === tab.title }">
+                <span x-text="tab.title"></span>
+              </a>
+            </li>
+          </template>
+        </ul>
+
+        <div class="bg-gray-100 rounded shadow p-3 mt-4">
+          <template x-for="(tab, i) in tabsData" :key="i">
+            <div x-cloak x-show="activeTab === tab.title">
+              <div x-html="tab.content"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tabsContent = {
+      tabsData: [
+        {
+          title: 'Details',
+          content: 'Details content with simple text'
+        },
+        {
+          title: 'Alguém Fez Isso',
+          content: 'Sample content to data'
+        },
+        {
+          title: 'Specs with code',
+          content: 'Specs content with <strong>html tag</strong>'
+        },
+        {
+          title: 'Reviews',
+          content: 'Reviews content with image <img src=\'https://images.fastfashionnews.co.uk/wp-content/uploads/2020/11/Contemporary-Fashion-696x464.jpeg\' class=\'max-w-2xl rounded mt-3\'>'
+        },
+      ]
+    }
+
+    const initialData = tabsContent.tabsData[0].title
+
+    const formatUrl = el => el.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().replace(/ /g, '-')
+  </script>
+</body>
+
+</html>

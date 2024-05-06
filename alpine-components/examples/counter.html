@@ -1,0 +1,25 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <div class="flex gap-2" x-data="{ count: 0 }">
+      <button class="py-2 w-11 bg-gray-800 rounded text-white text-lg hover:bg-gray-700"
+        @click="count > 0 ? count-- : null">-</button>
+      <span class="px-4 py-3 bg-gray-200 w-20 rounded text-sm" x-text="count"></span>
+      <button class="w-11 py-2 bg-gray-800 rounded text-white text-lg hover:bg-gray-700" @click="count++">+</button>
+    </div>
+  </main>
+</body>
+
+</html>

@@ -1,0 +1,66 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <section x-data="faqData" class="flex flex-col gap-4">
+      <template x-for="(faq, index) in faqs" :key="index">
+        <div>
+          <button class="w-full font-bold p-3 bg-gray-100 rounded flex justify-between items-center"
+            :class="{'bg-gray-300 shadow': faq.isOpen}"
+            @click="faqs = faqs.map(f => ({ ...f, isOpen: f.question !== faq.question ? false : !f.isOpen}))">
+
+            <div x-text="faq.question"></div>
+
+            <svg x-show="!faq.isOpen" class="fill-current" viewBox="0 0 24 24" width="24" height="24">
+              <path class="heroicon-ui"
+                d="M12 22a10 10 0 110-20 10 10 0 010 20zm0-2a8 8 0 100-16 8 8 0 000 16zm1-9h2a1 1 0 010 2h-2v2a1 1 0 01-2 0v-2H9a1 1 0 010-2h2V9a1 1 0 012 0v2z" />
+            </svg>
+
+            <svg x-show="faq.isOpen" class="fill-current" viewBox="0 0 24 24" width="24" height="24">
+              <path class="heroicon-ui"
+                d="M12 22a10 10 0 110-20 10 10 0 010 20zm0-2a8 8 0 100-16 8 8 0 000 16zm4-8a1 1 0 01-1 1H9a1 1 0 010-2h6a1 1 0 011 1z" />
+            </svg>
+          </button>
+
+          <div class="text-gray-700 text-sm p-3" x-text="faq.answer" x-show="faq.isOpen"></div>
+        </div>
+      </template>
+    </section>
+  </main>
+
+  <script>
+    const faqData = {
+      faqs: [
+        {
+          question: 'Sample question 1',
+          answer: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolores iure quas laudantium dicta impedit, est id delectus molestiae deleniti enim nobis rem et nihil.',
+          isOpen: true,
+        },
+        {
+          question: 'Sample question 2',
+          answer: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eligendi cumque, nulla harum aspernatur veniam ullam provident neque temporibus autem itaque odit.',
+          isOpen: false,
+        },
+        {
+          question: 'Sample question 3',
+          answer: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eligendi cumque, nulla harum aspernatur veniam ullam provident neque temporibus autem itaque odit.',
+          isOpen: false,
+        },
+      ]
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,61 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <section class="gallery" x-data="{ tab: 'all' }">
+
+      <nav class="flex justify-center gap-4 p-3">
+        <button class="text-gray-400" @click="tab = 'all'" :class="{ 'text-gray-900' : tab === 'all' }">All</button>
+        <button class="text-gray-400" @click="tab = 'cats'" :class="{ 'text-gray-900' : tab === 'cats' }">Cats</button>
+        <button class="text-gray-400" @click="tab = 'dogs'" :class="{ 'text-gray-900' : tab === 'dogs' }">Dogs</button>
+      </nav>
+
+      <ul class="flex flex-wrap justify-center gap-4">
+        <li x-show="tab === 'cats' || tab === 'all'">
+          <img class="rounded shadow"
+            src="https://images.unsplash.com/photo-1560114928-40f1f1eb26a0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjc5NjV9&auto=format&fit=crop&w=300&q=80"
+            alt="Running Kitty" title="Running Kitty">
+        </li>
+        <li x-show="tab === 'cats' || tab === 'all'">
+          <img class="rounded shadow"
+            src="https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
+            alt="Shocked Kitty" title="Shocked Kitty">
+        </li>
+        <li x-show="tab === 'cats' || tab === 'all'">
+          <img class="rounded shadow"
+            src="https://images.unsplash.com/photo-1487300001871-12053913095d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80"
+            alt="Sleeping Kitty" title="Sleeping Kitty">
+        </li>
+        <li x-show="tab === 'dogs' || tab === 'all'">
+          <img class="rounded shadow"
+            src="https://images.unsplash.com/photo-1518914781460-a3ada465edec?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80"
+            alt="Tiny puppy" title="Tiny puppy">
+        </li>
+        <li x-show="tab === 'dogs' || tab === 'all'">
+          <img class="rounded shadow"
+            src="https://images.unsplash.com/photo-1550948537-130a1ce83314?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
+            alt="Jumping puppy" title="Jumping puppy">
+        </li>
+        <li x-show="tab === 'dogs' || tab === 'all'">
+          <img class="rounded shadow"
+            src="https://images.unsplash.com/photo-1529906920574-628dc1e49f5a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80"
+            alt="Happy Puppy" title="Happy Puppy">
+        </li>
+      </ul>
+    </section>
+  </main>
+</body>
+
+</html>

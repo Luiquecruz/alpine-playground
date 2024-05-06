@@ -1,0 +1,771 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <!-- <script src="https://apexcharts.com/samples/assets/irregular-data-series.js"></script> -->
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <!-- select -->
+    <div x-data class="max-w-xs relative">
+      <select id="model"
+        class="appearance-none bg-gray-50 border p-2 border-gray-200 text-gray-900 text-sm w-full rounded focus:border-gray-400 focus:outline-none">
+        <template x-for="option in 6" :key="option">
+          <option x-text="`option ${option}`" :value="option +1"></option>
+        </template>
+      </select>
+
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30"
+        class="absolute w-4 h-4 right-3 top-[10px] pointer-events-none">
+        <path
+          d="M3 12v-2a1.002 1.002 0 0 1 1.634-.774L15 17.708l10.367-8.482A1.001 1.001 0 0 1 27 10v2a1 1 0 0 1-.367.774l-11 9a1.002 1.002 0 0 1-1.267 0l-11-9A1.003 1.003 0 0 1 3 12z" />
+      </svg>
+    </div>
+
+    <div class="w-full mt-8">
+      <div id="chart-year"></div>
+      <div id="chart-quarter"></div>
+    </div>
+  </main>
+
+  <script>
+    // function initDynamicChart() {
+    //   this.$refs.chartYear.addEventListener('dataPointSelection', function (e, chart, opts) {
+    //     if (opts.selectedDataPoints[0].length === 1) {
+    //       if (this.$refs.chartQuarter.classList.contains("active")) {
+    //         updateQuarterChart(chart, 'barQuarter')
+    //       } else {
+    //         this.$refs.chartYear.classList.add("chart-quarter-activated")
+    //         this.$refs.chartQuarter.classList.add("active");
+    //         updateQuarterChart(chart, 'barQuarter')
+    //       }
+    //     } else {
+    //       updateQuarterChart(chart, 'barQuarter')
+    //     }
+
+    //     if (opts.selectedDataPoints[0].length === 0) {
+    //       this.$refs.chartYear.classList.remove("chart-quarter-activated")
+    //       this.$refs.chartQuarter.classList.remove("active");
+    //     }
+    //   })
+
+    //   this.$refs.chartYear.addEventListener('updated', function (chart) {
+    //     updateQuarterChart(chart, 'barQuarter')
+    //   })
+
+    //   return {
+    //     colors: ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#00D9E9', '#FF66C3'],
+    //     chart: null,
+    //     chartQuarter: null,
+
+    //     init() {
+    //       this.chart = new ApexCharts(this.$refs.chartYear, this.options)
+    //       this.chartQuarter = new ApexCharts(this.$refs.chartQuarter, this.options)
+    //       this.chart.render()
+    //       this.chartQuarter.render()
+    //     },
+
+    //     makeData() {
+    //       let dataSet = shuffleArray(this.arrayData)
+
+    //       let dataYearSeries = [{
+    //         x: "2011",
+    //         y: dataSet[0].y,
+    //         color: this.colors[0],
+    //         quarters: dataSet[0].quarters
+    //       }, {
+    //         x: "2012",
+    //         y: dataSet[1].y,
+    //         color: this.colors[1],
+    //         quarters: dataSet[1].quarters
+    //       }, {
+    //         x: "2013",
+    //         y: dataSet[2].y,
+    //         color: this.colors[2],
+    //         quarters: dataSet[2].quarters
+    //       }, {
+    //         x: "2014",
+    //         y: dataSet[3].y,
+    //         color: this.colors[3],
+    //         quarters: dataSet[3].quarters
+    //       }, {
+    //         x: "2015",
+    //         y: dataSet[4].y,
+    //         color: this.colors[4],
+    //         quarters: dataSet[4].quarters
+    //       }, {
+    //         x: "2016",
+    //         y: dataSet[5].y,
+    //         color: this.colors[5],
+    //         quarters: dataSet[5].quarters
+    //       }];
+
+    //       return dataYearSeries
+    //     },
+
+    //     get options() {
+    //       return {
+    //         series: [{
+    //           data: this.makeData
+    //         }],
+    //         chart: {
+    //           id: 'barYear',
+    //           height: 400,
+    //           width: '100%',
+    //           type: 'bar',
+    //           events: {
+    //             dataPointSelection: function (e, chart, opts) {
+    //               var yearChartEl = this.$refs.chartYear
+    //               var quarterChartEl = this.$refs.chartQuarter
+
+    //               if (opts.selectedDataPoints[0].length === 1) {
+    //                 if (quarterChartEl.classList.contains("active")) {
+    //                   updateQuarterChart(chart, 'barQuarter')
+    //                 } else {
+    //                   yearChartEl.classList.add("chart-quarter-activated")
+    //                   quarterChartEl.classList.add("active");
+    //                   updateQuarterChart(chart, 'barQuarter')
+    //                 }
+    //               } else {
+    //                 updateQuarterChart(chart, 'barQuarter')
+    //               }
+
+    //               if (opts.selectedDataPoints[0].length === 0) {
+    //                 yearChartEl.classList.remove("chart-quarter-activated")
+    //                 quarterChartEl.classList.remove("active");
+    //               }
+    //             },
+    //             updated: function (chart) {
+    //               updateQuarterChart(chart, 'barQuarter')
+    //             }
+    //           }
+    //         },
+    //         plotOptions: {
+    //           bar: {
+    //             distributed: true,
+    //             horizontal: true,
+    //             barHeight: '75%',
+    //             dataLabels: {
+    //               position: 'bottom'
+    //             }
+    //           }
+    //         },
+    //         dataLabels: {
+    //           enabled: true,
+    //           textAnchor: 'start',
+    //           style: {
+    //             colors: ['#fff']
+    //           },
+    //           formatter: function (val, opt) {
+    //             return opt.w.globals.labels[opt.dataPointIndex]
+    //           },
+    //           offsetX: 0,
+    //           dropShadow: {
+    //             enabled: true
+    //           }
+    //         },
+    //         colors: this.colors,
+    //         states: {
+    //           normal: {
+    //             filter: {
+    //               type: 'desaturate'
+    //             }
+    //           },
+    //           active: {
+    //             allowMultipleDataPointsSelection: true,
+    //             filter: {
+    //               type: 'darken',
+    //               value: 1
+    //             }
+    //           }
+    //         },
+    //         tooltip: {
+    //           x: {
+    //             show: false
+    //           },
+    //           y: {
+    //             title: {
+    //               formatter: function (val, opts) {
+    //                 return opts.w.globals.labels[opts.dataPointIndex]
+    //               }
+    //             }
+    //           }
+    //         },
+    //         title: {
+    //           text: 'Yearly Results',
+    //           offsetX: 15
+    //         },
+    //         subtitle: {
+    //           text: '(Click on bar to see details)',
+    //           offsetX: 15
+    //         },
+    //         yaxis: {
+    //           labels: {
+    //             show: false
+    //           }
+    //         }
+    //       }
+    //     },
+
+    //     get optionsQuarter() {
+    //       return {
+    //         series: [{
+    //           data: []
+    //         }],
+    //         chart: {
+    //           id: 'barQuarter',
+    //           height: 400,
+    //           width: '100%',
+    //           type: 'bar',
+    //           stacked: true
+    //         },
+    //         plotOptions: {
+    //           bar: {
+    //             columnWidth: '50%',
+    //             horizontal: false
+    //           }
+    //         },
+    //         legend: {
+    //           show: false
+    //         },
+    //         grid: {
+    //           yaxis: {
+    //             lines: {
+    //               show: false,
+    //             }
+    //           },
+    //           xaxis: {
+    //             lines: {
+    //               show: true,
+    //             }
+    //           }
+    //         },
+    //         yaxis: {
+    //           labels: {
+    //             show: false
+    //           }
+    //         },
+    //         title: {
+    //           text: 'Quarterly Results',
+    //           offsetX: 10
+    //         },
+    //         tooltip: {
+    //           x: {
+    //             formatter: function (val, opts) {
+    //               return opts.w.globals.seriesNames[opts.seriesIndex]
+    //             }
+    //           },
+    //           y: {
+    //             title: {
+    //               formatter: function (val, opts) {
+    //                 return opts.w.globals.labels[opts.dataPointIndex]
+    //               }
+    //             }
+    //           }
+    //         }
+    //       }
+    //     },
+
+    //     get arrayData() {
+    //       [
+    //         {
+    //           y: 400,
+    //           quarters: [{
+    //             x: 'Q1',
+    //             y: 120
+    //           }, {
+    //             x: 'Q2',
+    //             y: 90
+    //           }, {
+    //             x: 'Q3',
+    //             y: 100
+    //           }, {
+    //             x: 'Q4',
+    //             y: 90
+    //           }]
+    //         },
+    //         {
+    //           y: 430,
+    //           quarters: [{
+    //             x: 'Q1',
+    //             y: 120
+    //           }, {
+    //             x: 'Q2',
+    //             y: 110
+    //           }, {
+    //             x: 'Q3',
+    //             y: 90
+    //           }, {
+    //             x: 'Q4',
+    //             y: 110
+    //           }]
+    //         },
+    //         {
+    //           y: 448,
+    //           quarters: [{
+    //             x: 'Q1',
+    //             y: 70
+    //           }, {
+    //             x: 'Q2',
+    //             y: 100
+    //           }, {
+    //             x: 'Q3',
+    //             y: 140
+    //           }, {
+    //             x: 'Q4',
+    //             y: 138
+    //           }]
+    //         },
+    //         {
+    //           y: 470,
+    //           quarters: [{
+    //             x: 'Q1',
+    //             y: 150
+    //           }, {
+    //             x: 'Q2',
+    //             y: 60
+    //           }, {
+    //             x: 'Q3',
+    //             y: 190
+    //           }, {
+    //             x: 'Q4',
+    //             y: 70
+    //           }]
+    //         },
+    //         {
+    //           y: 540,
+    //           quarters: [{
+    //             x: 'Q1',
+    //             y: 120
+    //           }, {
+    //             x: 'Q2',
+    //             y: 120
+    //           }, {
+    //             x: 'Q3',
+    //             y: 130
+    //           }, {
+    //             x: 'Q4',
+    //             y: 170
+    //           }]
+    //         },
+    //         {
+    //           y: 580,
+    //           quarters: [{
+    //             x: 'Q1',
+    //             y: 170
+    //           }, {
+    //             x: 'Q2',
+    //             y: 130
+    //           }, {
+    //             x: 'Q3',
+    //             y: 120
+    //           }, {
+    //             x: 'Q4',
+    //             y: 160
+    //           }]
+    //         }
+    //       ]
+    //     },
+
+    //     updateQuarterChart(sourceChart, destChartIDToUpdate) {
+    //       var series = []
+    //       var seriesIndex = 0
+    //       var colors = []
+
+    //       if (sourceChart.w.globals.selectedDataPoints[0]) {
+    //         var selectedPoints = sourceChart.w.globals.selectedDataPoints;
+    //         for (var i = 0; i < selectedPoints[seriesIndex].length; i++) {
+    //           var selectedIndex = selectedPoints[seriesIndex][i];
+    //           var yearSeries = sourceChart.w.config.series[seriesIndex];
+    //           series.push({
+    //             name: yearSeries.data[selectedIndex].x,
+    //             data: yearSeries.data[selectedIndex].quarters
+    //           })
+    //           colors.push(yearSeries.data[selectedIndex].color)
+    //         }
+
+    //         if (series.length === 0) series = [{
+    //           data: []
+    //         }]
+
+    //         return ApexCharts.exec(destChartIDToUpdate, 'updateOptions', {
+    //           series: series,
+    //           colors: colors,
+    //           fill: {
+    //             colors: colors
+    //           }
+    //         })
+    //       }
+    //     }
+    //   }
+    // }
+  </script>
+
+  <script>
+    const colors = ['#008FFB', '#00E396', '#FEB019', '#FF4560', '#775DD0', '#00D9E9', '#FF66C3'];
+
+    const arrayData = [{
+      y: 400,
+      quarters: [{
+        x: 'Q1',
+        y: 120
+      }, {
+        x: 'Q2',
+        y: 90
+      }, {
+        x: 'Q3',
+        y: 100
+      }, {
+        x: 'Q4',
+        y: 90
+      }]
+    }, {
+      y: 430,
+      quarters: [{
+        x: 'Q1',
+        y: 120
+      }, {
+        x: 'Q2',
+        y: 110
+      }, {
+        x: 'Q3',
+        y: 90
+      }, {
+        x: 'Q4',
+        y: 110
+      }]
+    }, {
+      y: 448,
+      quarters: [{
+        x: 'Q1',
+        y: 70
+      }, {
+        x: 'Q2',
+        y: 100
+      }, {
+        x: 'Q3',
+        y: 140
+      }, {
+        x: 'Q4',
+        y: 138
+      }]
+    }, {
+      y: 470,
+      quarters: [{
+        x: 'Q1',
+        y: 150
+      }, {
+        x: 'Q2',
+        y: 60
+      }, {
+        x: 'Q3',
+        y: 190
+      }, {
+        x: 'Q4',
+        y: 70
+      }]
+    }, {
+      y: 540,
+      quarters: [{
+        x: 'Q1',
+        y: 120
+      }, {
+        x: 'Q2',
+        y: 120
+      }, {
+        x: 'Q3',
+        y: 130
+      }, {
+        x: 'Q4',
+        y: 170
+      }]
+    }, {
+      y: 580,
+      quarters: [{
+        x: 'Q1',
+        y: 170
+      }, {
+        x: 'Q2',
+        y: 130
+      }, {
+        x: 'Q3',
+        y: 120
+      }, {
+        x: 'Q4',
+        y: 160
+      }]
+    }];
+
+    const options = {
+      series: [{
+        data: makeData()
+      }],
+      chart: {
+        id: 'barYear',
+        height: 400,
+        width: '100%',
+        type: 'bar',
+        events: {
+          updated: (chart) => {
+            updateQuarterChart(chart, 'barQuarter')
+          }
+        }
+      },
+      plotOptions: {
+        bar: {
+          distributed: true,
+          horizontal: true,
+          barHeight: '75%',
+          dataLabels: {
+            position: 'bottom'
+          }
+        }
+      },
+      dataLabels: {
+        enabled: true,
+        textAnchor: 'start',
+        style: {
+          colors: ['#fff']
+        },
+        formatter: function (val, opt) {
+          return opt.w.globals.labels[opt.dataPointIndex]
+        },
+        offsetX: 0,
+        dropShadow: {
+          enabled: true
+        }
+      },
+
+      colors: colors,
+
+      states: {
+        normal: {
+          filter: {
+            type: 'desaturate'
+          }
+        },
+        active: {
+          allowMultipleDataPointsSelection: true,
+          filter: {
+            type: 'darken',
+            value: 1
+          }
+        }
+      },
+      tooltip: {
+        x: {
+          show: false
+        },
+        y: {
+          title: {
+            formatter: function (val, opts) {
+              return opts.w.globals.labels[opts.dataPointIndex]
+            }
+          }
+        }
+      },
+      title: {
+        text: 'Yearly Results',
+        offsetX: 15
+      },
+      subtitle: {
+        text: '(Click on bar to see details)',
+        offsetX: 15
+      },
+      yaxis: {
+        labels: {
+          show: false
+        }
+      }
+    };
+
+    const optionsQuarter = {
+      series: [{
+        data: []
+      }],
+      chart: {
+        id: 'barQuarter',
+        height: 400,
+        width: '100%',
+        type: 'bar',
+        stacked: true
+      },
+      plotOptions: {
+        bar: {
+          columnWidth: '50%',
+          horizontal: false
+        }
+      },
+      legend: {
+        show: false
+      },
+      grid: {
+        yaxis: {
+          lines: {
+            show: false,
+          }
+        },
+        xaxis: {
+          lines: {
+            show: true,
+          }
+        }
+      },
+      yaxis: {
+        labels: {
+          show: false
+        }
+      },
+      title: {
+        text: 'Quarterly Results',
+        offsetX: 10
+      },
+      tooltip: {
+        x: {
+          formatter: function (val, opts) {
+            return opts.w.globals.seriesNames[opts.seriesIndex]
+          }
+        },
+        y: {
+          title: {
+            formatter: function (val, opts) {
+              return opts.w.globals.labels[opts.dataPointIndex]
+            }
+          }
+        }
+      }
+    };
+
+    function shuffleArray(array) {
+      for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+      }
+      return array;
+    }
+
+    function makeData() {
+      var dataSet = shuffleArray(arrayData)
+
+      var dataYearSeries = [{
+        x: "2011",
+        y: dataSet[0].y,
+        color: colors[0],
+        quarters: dataSet[0].quarters
+      }, {
+        x: "2012",
+        y: dataSet[1].y,
+        color: colors[1],
+        quarters: dataSet[1].quarters
+      }, {
+        x: "2013",
+        y: dataSet[2].y,
+        color: colors[2],
+        quarters: dataSet[2].quarters
+      }, {
+        x: "2014",
+        y: dataSet[3].y,
+        color: colors[3],
+        quarters: dataSet[3].quarters
+      }, {
+        x: "2015",
+        y: dataSet[4].y,
+        color: colors[4],
+        quarters: dataSet[4].quarters
+      }, {
+        x: "2016",
+        y: dataSet[5].y,
+        color: colors[5],
+        quarters: dataSet[5].quarters
+      }];
+
+      return dataYearSeries
+    }
+
+    function updateQuarterChart(sourceChart, destChartIDToUpdate) {
+      var series = [];
+      var seriesIndex = 0;
+      var colors = []
+
+      if (sourceChart.w.globals.selectedDataPoints[0]) {
+        var selectedPoints = sourceChart.w.globals.selectedDataPoints;
+        for (var i = 0; i < selectedPoints[seriesIndex].length; i++) {
+          var selectedIndex = selectedPoints[seriesIndex][i];
+          var yearSeries = sourceChart.w.config.series[seriesIndex];
+          series.push({
+            name: yearSeries.data[selectedIndex].x,
+            data: yearSeries.data[selectedIndex].quarters
+          })
+          colors.push(yearSeries.data[selectedIndex].color)
+        }
+
+        if (series.length === 0) series = [{
+          data: []
+        }]
+
+        return ApexCharts.exec(destChartIDToUpdate, 'updateOptions', {
+          series: series,
+          colors: colors,
+          fill: {
+            colors: colors
+          }
+        })
+      }
+    }
+
+    let chart = new ApexCharts(document.querySelector("#chart-year"), options);
+    chart.render();
+
+    let chartQuarter = new ApexCharts(document.querySelector("#chart-quarter"), optionsQuarter);
+    chartQuarter.render();
+
+    chart.addEventListener('dataPointSelection', (e, chart, opts) => {
+      var quarterChartEl = document.querySelector("#chart-quarter");
+      var yearChartEl = document.querySelector("#chart-year");
+
+      if (opts.selectedDataPoints[0].length === 1) {
+        if (quarterChartEl.classList.contains("active")) {
+          updateQuarterChart(chart, 'barQuarter')
+        }
+        else {
+          yearChartEl.classList.add("chart-quarter-activated")
+          quarterChartEl.classList.add("active");
+          updateQuarterChart(chart, 'barQuarter')
+        }
+      } else {
+        updateQuarterChart(chart, 'barQuarter')
+      }
+
+      if (opts.selectedDataPoints[0].length === 0) {
+        yearChartEl.classList.remove("chart-quarter-activated")
+        quarterChartEl.classList.remove("active");
+      }
+
+    })
+
+    chart.addEventListener('updated', (chart) => {
+      updateQuarterChart(chart, 'barQuarter')
+    })
+
+    document.querySelector("#model").addEventListener("change", (e) => {
+      chart.updateSeries([{
+        data: makeData()
+      }])
+    })
+
+  </script>
+</body>
+
+</html>

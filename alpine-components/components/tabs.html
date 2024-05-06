@@ -1,0 +1,68 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <section x-data="tabsContent">
+      <div x-data="{ activeTab: tabsContent.tabsData[0].title }">
+        <ul class="flex flex-wrap gap-4">
+          <template x-for="tab in tabsData" :key="tab.title">
+            <li>
+              <button @click="activeTab = tab.title" :class="{ 'bg-gray-300': activeTab === tab.title }"
+                class="px-4 py-2 bg-gray-100 text-sm rounded hover:bg-gray-200">
+                <span x-text="tab.title"></span>
+              </button>
+            </li>
+          </template>
+        </ul>
+
+        <div class="bg-gray-100 rounded shadow p-3 mt-4">
+          <template x-for="(tab, i) in tabsData" :key="i">
+            <div x-cloak x-show="activeTab === tab.title">
+              <div x-html="tab.content"></div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tabsContent = {
+      tabsData: [
+        {
+          title: 'Simple tab',
+          content: 'Details content with simple text'
+        },
+        {
+          title: 'Tab with HTML',
+          content: `
+          Content with <strong>html tag</strong> <br />
+          <ul>
+            <li class="text-green-600">Yes</li>
+            <li><a class="cursor-alias underline text-blue-500" href="https://www.caravel.com.br" target="_blank">We</a></li>
+            <li>Have!</li>
+          </ul>
+          `
+        },
+        {
+          title: 'Tab with image',
+          content: 'Content with image <img src=\'https://images.fastfashionnews.co.uk/wp-content/uploads/2020/11/Contemporary-Fashion-696x464.jpeg\' class=\'max-w-2xl rounded mt-3\'>'
+        },
+      ]
+    }
+  </script>
+</body>
+
+</html>
