@@ -1,0 +1,125 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main x-data="initApp()">
+    <!-- <pre>https://www.nintendo.com.hk/data/json/switch_software.json</pre> -->
+
+    <header>
+      <h1 class="text-center text-3xl font-bold mb-6">Get Games</h1>
+
+      <template x-if="!data.length">
+        <div class="flex items-center justify-center gap-4">
+          <button class="px-4 py-2 bg-red-600 hover:b-red-500 text-white rounded-lg" @click="getNintendoData()">Nintendo</button>
+          <button class="px-4 py-2 bg-blue-600 hover:b-blue-500 text-white rounded-lg" @click="getPlaystationData()">Playstation</button>
+        </div>
+      </template>
+
+      <template x-if="data.length">
+        <button class="block mx-auto px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 rounded-lg" @click="clearData()">Clear</button>
+      </template>
+    </header>
+
+    <template x-if="loading">
+      <ul class="flex flex-col gap-4">
+        <template x-for="i in 6">
+          <li class="flex justify-between gap-2 bg-gray-200 animate-pulse p-4 h-20 rounded-xl"></li>
+        </template>
+      </ul>
+    </template>
+
+    <template x-if="!loading">
+      <ul class="flex flex-col gap-4">
+        <template x-for="game in data">
+          <li class="flex justify-between gap-2 bg-red-600 p-4 rounded-xl"
+              :class="{
+                'bg-red-600': platform === 'nintendo',
+                'bg-blue-600': platform === 'playstation',
+              }">
+            <div>
+              <p class="text-white font-bold text-md" x-text="game.name"></p>
+
+              <template x-for="publisher in game.publishers">
+                <small class="text-white" x-text="publisher"></small>
+              </template>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <template x-for="genre in game.genre">
+                <span class="rounded-full px-1.5 text-sm bg-white text-black text-center rounded-full" x-text="genre"></span>
+              </template>
+            </div>
+            <!-- <img :src="`https://store.nintendo.com.hk/${data[1].thumb_img}`" alt=""> -->
+          </li>
+        </template>
+      </ul>
+    </template>
+  </main>
+</body>
+
+<script>
+  function initApp() {
+    // @TODO: figure out how to get images
+    // @TODO: figure out how to get eshop urls
+    // @TODO: add methods to get Nintendo games
+    // @TODO: add methods to get Playstation games
+    // @TODO: add search
+    // @TODO: add pagination
+    // @TODO: save to a custom list
+    // @TODO: add category
+    // @TODO: push data to a custom backend
+    return {
+      // api: 'https://www.nintendo.com.hk/data/json/switch_software.json',
+      api2: 'https://api.sampleapis.com/switch/games',
+      api3: 'https://api.sampleapis.com/playstation/games',
+      data: [],
+      platform: '',
+      loading: false,
+
+      init() {
+        this.platform = ''
+      },
+      async getNintendoData() {
+        this.loading = true
+
+        await fetch(this.api2)
+          .then(res => res.json())
+          .then(data => {
+            this.data = data
+            this.platform = 'nintendo'
+          })
+
+          this.loading = false
+      },
+      async getPlaystationData() {
+        this.loading = true
+
+        await fetch(this.api3)
+          .then(res => res.json())
+          .then(data => {
+            this.data = data
+            this.platform = 'playstation'
+          })
+
+          this.loading = false
+      },
+      clearData() {
+        this.data = []
+        this.platform = ''
+      }
+    }
+  }
+</script>
+
+</html>
