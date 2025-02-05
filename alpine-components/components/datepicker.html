@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+    <div x-data="datePicker()" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
+        <div class="space-y-4">
+            <!-- Year Picker -->
+            <div>
+                <label for="year" class="block text-sm font-medium text-gray-700">Select Year</label>
+                <select x-model="selectedYear" @change="clearSelection()" id="year" class="mt-2 block w-full px-3 py-2 bg-gray-100 rounded-md border border-gray-300">
+                    <template x-for="year in years" :key="year">
+                        <option :value="year" x-text="year"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Month Picker -->
+            <div>
+                <label for="month" class="block text-sm font-medium text-gray-700">Select Month</label>
+                <div class="grid grid-cols-3 gap-2 mt-2">
+                    <template x-for="(month, index) in months" :key="index">
+                        <button @click="selectedMonth = index; clearSelection()" :class="{
+                            'bg-blue-500 text-white': selectedMonth === index,
+                            'bg-gray-100': selectedMonth !== index
+                        }" class="p-2 rounded-md hover:bg-blue-300" x-text="month"></button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Day Picker -->
+            <div>
+                <label for="day" class="block text-sm font-medium text-gray-700">Select Day</label>
+                <div class="grid grid-cols-7 gap-1 mt-2">
+                    <template x-for="day in daysInMonth()" :key="day">
+                        <button
+                            @click="toggleDaySelection(day)"
+                            @mousedown="startAddingData(day)"
+                            @mouseup="stopAddingData()"
+                            @contextmenu.prevent="startAddingData(day)"
+                            :class="{
+                                'bg-blue-500 text-white': isSelectedDay(day),
+                                'bg-blue-100': isInRange(day),
+                                'cursor-not-allowed bg-gray-300': isPastDay(day)
+                            }"
+                            :disabled="isPastDay(day)"
+                            class="p-2 rounded-md hover:bg-blue-300"
+                            x-text="day"
+                        ></button>
+                    </template>
+                </div>
+            </div>
+
+            <div>
+                <button @click="getData()" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+                    Get Data
+                </button>
+            </div>
+
+            <!-- Selected Data Display -->
+            <div x-show="selectedData" class="mt-4 p-4 bg-gray-50 rounded-md border border-gray-200">
+                <h3 class="font-semibold text-lg">Selected Date Data:</h3>
+                <ul>
+                    <template x-for="(data, day) in selectedData" :key="day">
+                        <li>
+                            <strong>Day <span x-text="day"></span>:</strong> <span x-text="data.note || 'No data'"></span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function datePicker() {
+            const currentYear = new Date().getFullYear(); // Get the current year
+            const currentMonth = new Date().getMonth(); // Get the current month (0-11)
+            const currentDay = new Date().getDate(); // Get the current day of the month
+
+            return {
+                selectedYear: currentYear, // Set the default year to the current year
+                selectedMonth: currentMonth, // Set the default month to the current month
+                selectedStartDay: currentDay, // Set the default start day to the current day
+                selectedEndDay: currentDay, // Set the default end day to the current day
+                years: Array.from({ length: 26 }, (_, i) => currentYear - 25 + i), // Create years from 25 years before to the current year
+                months: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+                daysData: {}, // Object to store data for each day of the month
+                selectedData: null, // Data to display for selected days
+                isAddingData: false, // Flag to track if the user is adding data for a day
+                dayToAddData: null, // Track which day the user is adding data for
+
+                getData() {
+                    let data = {};
+
+                    // If a single day is selected, return data for that day
+                    if (this.selectedStartDay && !this.selectedEndDay) {
+                        data[this.selectedStartDay] = this.daysData[this.selectedStartDay] || { note: 'No data' };
+                    }
+                    // If a range of days is selected, return data for the range
+                    else if (this.selectedStartDay && this.selectedEndDay) {
+                        for (let day = this.selectedStartDay; day <= this.selectedEndDay; day++) {
+                            data[day] = this.daysData[day] || { note: 'No data' };
+                        }
+                    }
+
+                    // If no days are selected, set the message
+                    if (Object.keys(data).length === 0) {
+                        this.selectedData = "No data available for the selected day or range.";
+                    } else {
+                        this.selectedData = data;
+                    }
+                },
+
+                daysInMonth() {
+                    const days = new Date(this.selectedYear, this.selectedMonth + 1, 0).getDate();
+                    return Array.from({ length: days }, (_, i) => i + 1);
+                },
+
+                isPastDay(day) {
+                    return this.selectedYear === currentYear && this.selectedMonth === currentMonth && day < currentDay;
+                },
+
+                isSelectedDay(day) {
+                    return day === this.selectedStartDay || day === this.selectedEndDay;
+                },
+
+                isInRange(day) {
+                    if (this.selectedStartDay && this.selectedEndDay) {
+                        return day > Math.min(this.selectedStartDay, this.selectedEndDay) && day < Math.max(this.selectedStartDay, this.selectedEndDay);
+                    }
+                    return false;
+                },
+
+                toggleDaySelection(day) {
+                    if (!this.selectedStartDay) {
+                        // If no start day, set this day as the start day
+                        this.selectedStartDay = day;
+                        this.selectedEndDay = day; // Set the end day to the same day
+                    } else if (!this.selectedEndDay) {
+                        // If start day exists, set this day as the end day
+                        if (day >= this.selectedStartDay) {
+                            this.selectedEndDay = day;
+                        } else {
+                            // If end day is before start day, set the start day to this day
+                            this.selectedEndDay = this.selectedStartDay;
+                            this.selectedStartDay = day;
+                        }
+                    } else {
+                        // If both start and end days are selected, reset the selection
+                        this.selectedStartDay = day;
+                        this.selectedEndDay = null;
+                    }
+                },
+
+                startAddingData(day) {
+                    // Ensure the current range selection is maintained
+                    this.isAddingData = true;
+                    this.dayToAddData = day;
+                    // Optionally show a prompt to let the user input data
+                    setTimeout(() => {
+                        if (this.isAddingData && this.dayToAddData === day) {
+                            const data = prompt(`Enter data for day ${day} (${this.months[this.selectedMonth]} ${this.selectedYear}):`);
+                            if (data) {
+                                // Store the data in the daysData object
+                                this.daysData[day] = { note: data };
+                            }
+                            this.isAddingData = false;
+                            this.dayToAddData = null;
+                        }
+                    }, 800); // Timeout for long press detection
+                },
+
+                stopAddingData() {
+                    this.isAddingData = false;
+                },
+
+                clearSelection() {
+                    this.selectedStartDay = null;
+                    this.selectedEndDay = null;
+                },
+            };
+        }
+    </script>
+
+</body>
+</html>
