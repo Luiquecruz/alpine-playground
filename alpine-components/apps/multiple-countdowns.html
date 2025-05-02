@@ -1,0 +1,138 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <div x-data="promotionCounter()" x-init="init()" class="max-w-4xl mx-auto space-y-6">
+        <template x-for="(promotion, index) in promotions" :key="index">
+            <div class="rounded-lg shadow-md p-6"
+                 :class="{
+                     'bg-green-100': promotion.status === 'active',
+                     'bg-blue-100': promotion.status === 'upcoming',
+                     'bg-red-100': promotion.status === 'expired'
+                 }">
+                <h3 class="text-xl font-bold mb-4" x-text="promotion.title"></h3>
+
+                <div x-show="promotion.status === 'active'" class="space-y-2">
+                    <p class="text-green-600 font-medium">Active - Time remaining:</p>
+                    <div class="flex gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" x-text="promotion.timeRemaining.days"></div>
+                            <div class="text-sm text-gray-600">Days</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" x-text="promotion.timeRemaining.hours"></div>
+                            <div class="text-sm text-gray-600">Hours</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" x-text="promotion.timeRemaining.minutes"></div>
+                            <div class="text-sm text-gray-600">Minutes</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold" x-text="promotion.timeRemaining.seconds"></div>
+                            <div class="text-sm text-gray-600">Seconds</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p x-show="promotion.status === 'upcoming'" class="text-blue-600 font-medium">
+                    Starts in:
+                    <span x-text="`${promotion.timeRemaining.days}d ${promotion.timeRemaining.hours}h ${promotion.timeRemaining.minutes}m`"></span>
+                </p>
+
+                <p x-show="promotion.status === 'expired'" class="text-red-600 font-medium">
+                    Promotion has ended
+                </p>
+            </div>
+        </template>
+    </div>
+  </main>
+
+    <script>
+        function promotionCounter() {
+            return {
+                currentTime: Date.now(),
+                intervalId: null,
+                promotions: [
+                    {
+                        title: 'Summer Sale',
+                        startDateTime: '2025-02-07T00:00:00',
+                        endDateTime: '2025-03-15T23:59:59',
+                        status: 'upcoming',
+                        timeRemaining: {}
+                    },
+                    {
+                        title: 'Spring Clearance',
+                        startDateTime: '2025-02-01T00:00:00',
+                        endDateTime: '2025-03-25T23:59:59',
+                        status: 'active',
+                        timeRemaining: {}
+                    },
+                    {
+                        title: 'Winter Special',
+                        startDateTime: '2024-01-01T00:00:00',
+                        endDateTime: '2024-01-07T23:59:59',
+                        status: 'expired',
+                        timeRemaining: {}
+                    }
+                ],
+
+                init() {
+                    this.updatePromotions();
+                    this.intervalId = setInterval(() => {
+                        this.currentTime = Date.now();
+                        this.updatePromotions();
+                    }, 1000);
+
+                    this.$root.addEventListener('destroy', () => {
+                        clearInterval(this.intervalId);
+                    });
+                },
+
+                updatePromotions() {
+                    this.promotions = this.promotions.map(promotion => {
+                        const start = Date.parse(promotion.startDateTime);
+                        const end = Date.parse(promotion.endDateTime);
+
+                        if (this.currentTime < start) {
+                            promotion.status = 'upcoming';
+                            promotion.timeRemaining = this.calculateTimeRemaining(start);
+                        } else if (this.currentTime <= end) {
+                            promotion.status = 'active';
+                            promotion.timeRemaining = this.calculateTimeRemaining(end);
+                        } else {
+                            promotion.status = 'expired';
+                            promotion.timeRemaining = {};
+                        }
+
+                        return promotion;
+                    });
+                },
+
+                calculateTimeRemaining(targetTime) {
+                    const diff = targetTime - this.currentTime;
+
+                    return {
+                        days: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24))).toString().padStart(2, '0'),
+                        hours: Math.max(0, Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))).toString().padStart(2, '0'),
+                        minutes: Math.max(0, Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).toString().padStart(2, '0'),
+                        seconds: Math.max(0, Math.floor((diff % (1000 * 60)) / 1000)).toString().padStart(2, '0')
+                    };
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
