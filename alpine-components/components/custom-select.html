@@ -1,0 +1,55 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <div x-data="customSelect()" class="relative inline-block text-left">
+      <button x-on:click="open = !open" type="button" class="inline-flex justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-100">
+        <span x-text="selectedOption ? selectedOption : 'Selecione uma opção'"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+
+      <div x-show="open" x-transition class="absolute mt-2 origin-top-right bg-white border border-gray-300 rounded-lg shadow-lg w-full z-10">
+        <div class="py-1">
+          <template x-for="option in options" :key="option">
+            <button
+              x-on:click="selectOption(option)"
+              class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-600 hover:text-white w-full text-left">
+              <span x-text="option"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function customSelect() {
+      return {
+        open: false,
+        selectedOption: null,
+        options: ['Opção 1', 'Opção 2', 'Opção 3', 'Opção 4'],
+        selectOption(option) {
+          this.selectedOption = option;
+          this.open = false;
+        }
+      }
+    }
+  </script>
+
+</body>
+
+</html>
