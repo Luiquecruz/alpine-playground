@@ -1,0 +1,417 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <div x-data="initFilters" class="space-y-6 p-4 max-w-4xl mx-auto">
+      <!-- <template x-for="filter in filters" :key="filter.attribute_code">
+        <div class="p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+          <h3 class="text-lg font-semibold mb-3 text-gray-700" x-text="filter.label"></h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <template x-for="option in filter.options" :key="option.value">
+              <label class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
+                <input type="checkbox" :value="option.value"
+                  x-model="selectedOptions[filter.attribute_code]"
+                  class="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                <span class="text-gray-700" x-text="option.label"></span>
+                <span class="text-sm text-gray-500 ml-auto" x-text="`(${option.count})`"></span>
+              </label>
+            </template>
+          </div>
+        </div>
+      </template> -->
+
+      <template x-for="filter in filters" :key="filter.attribute_code">
+        <li class="mb-6">
+            <strong class="block mb-2 text-lg font-semibold" x-text="`${agg.label} (${agg.count})`"></strong>
+
+            <div class="space-y-2">
+              <template x-for="option in filter.options" :key="option.value">
+                    <label class="flex items-center space-x-3">
+                        <input
+                            type="checkbox"
+                            :value="option.value"
+                            x-model="selectedOptions[filter.attribute_code]"
+                            class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        >
+                        <span class="text-gray-700" x-text="`${option.label} (${option.count})`"></span>
+                    </label>
+                </template>
+            </div>
+        </li>
+    </template>
+
+      <!-- Selected Options Display -->
+      <div class="sticky bottom-0 bg-white p-4 border-t border-gray-200 shadow-lg">
+        <div class="max-w-4xl mx-auto">
+          <h4 class="text-lg font-semibold mb-2">Selected Filters:</h4>
+          <pre class="text-sm bg-gray-50 p-3 rounded" x-text="JSON.stringify(selectedOptions, null, 2)"></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function initFilters() {
+      return {
+        filters: [
+          {
+            "label": "Preço",
+            "attribute_code": "price",
+            "count": 19,
+            "options": [
+              {
+                "label": "36",
+                "value": "36",
+                "count": 1
+              },
+              {
+                "label": "820",
+                "value": "820",
+                "count": 1
+              },
+              {
+                "label": "1156",
+                "value": "1156",
+                "count": 1
+              },
+              {
+                "label": "1630",
+                "value": "1630",
+                "count": 1
+              },
+              {
+                "label": "1683",
+                "value": "1683",
+                "count": 1
+              },
+              {
+                "label": "2030",
+                "value": "2030",
+                "count": 1
+              },
+              {
+                "label": "2209",
+                "value": "2209",
+                "count": 1
+              },
+              {
+                "label": "2272",
+                "value": "2272",
+                "count": 1
+              },
+              {
+                "label": "2314",
+                "value": "2314",
+                "count": 2
+              },
+              {
+                "label": "2395",
+                "value": "2395",
+                "count": 1
+              },
+              {
+                "label": "2504",
+                "value": "2504",
+                "count": 1
+              },
+              {
+                "label": "2867",
+                "value": "2867",
+                "count": 1
+              },
+              {
+                "label": "2946",
+                "value": "2946",
+                "count": 1
+              },
+              {
+                "label": "3962",
+                "value": "3962",
+                "count": 1
+              },
+              {
+                "label": "4209",
+                "value": "4209",
+                "count": 1
+              },
+              {
+                "label": "5304",
+                "value": "5304",
+                "count": 1
+              },
+              {
+                "label": "6314",
+                "value": "6314",
+                "count": 1
+              },
+              {
+                "label": "9051",
+                "value": "9051",
+                "count": 1
+              },
+              {
+                "label": "16493",
+                "value": "16493",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "label": "is_external_product",
+            "attribute_code": "is_external_product",
+            "count": 1,
+            "options": [
+              {
+                "label": "",
+                "value": "No",
+                "count": 20
+              }
+            ]
+          },
+          {
+            "label": "Capacidade",
+            "attribute_code": "ec_capacidade",
+            "count": 7,
+            "options": [
+              {
+                "label": "12.000 Btus",
+                "value": "12.000 Btus",
+                "count": 2
+              },
+              {
+                "label": "16.000 BTUs",
+                "value": "16.000 BTUs",
+                "count": 1
+              },
+              {
+                "label": "24.000 Btus",
+                "value": "24.000 Btus",
+                "count": 2
+              },
+              {
+                "label": "56.000 BTUs",
+                "value": "56.000 BTUs",
+                "count": 1
+              },
+              {
+                "label": "7.500 BTUs",
+                "value": "7.500 BTUs",
+                "count": 2
+              },
+              {
+                "label": "9.000 BTUs",
+                "value": "9.000 BTUs",
+                "count": 3
+              },
+              {
+                "label": "10.000 BTUs",
+                "value": "10.000 BTUs",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "label": "Ciclo",
+            "attribute_code": "ec_ciclo",
+            "count": 4,
+            "options": [
+              {
+                "label": "Frio",
+                "value": "Frio",
+                "count": 6
+              },
+              {
+                "label": "Quente/Frio",
+                "value": "Quente/Frio",
+                "count": 5
+              },
+              {
+                "label": "Quente/frio",
+                "value": "Quente/frio",
+                "count": 1
+              },
+              {
+                "label": "frio",
+                "value": "frio",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "label": "Tecnologia",
+            "attribute_code": "ec_tecnologia",
+            "count": 4,
+            "options": [
+              {
+                "label": "inverter",
+                "value": "inverter",
+                "count": 8
+              },
+              {
+                "label": "Convencional",
+                "value": "Convencional",
+                "count": 4
+              },
+              {
+                "label": "Dual Inverter",
+                "value": "Dual Inverter",
+                "count": 2
+              },
+              {
+                "label": "Cycle Defrost",
+                "value": "Cycle Defrost",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "label": "Voltagem",
+            "attribute_code": "ec_voltagem",
+            "count": 3,
+            "options": [
+              {
+                "label": "110V",
+                "value": "110V",
+                "count": 2
+              },
+              {
+                "label": "127V",
+                "value": "127V",
+                "count": 1
+              },
+              {
+                "label": "220V",
+                "value": "220V",
+                "count": 16
+              }
+            ]
+          },
+          {
+            "label": "Marca",
+            "attribute_code": "ec_marca",
+            "count": 11,
+            "options": [
+              {
+                "label": "Consul",
+                "value": "Consul",
+                "count": 3
+              },
+              {
+                "label": "Electrolux",
+                "value": "Electrolux",
+                "count": 2
+              },
+              {
+                "label": "Elgin",
+                "value": "Elgin",
+                "count": 1
+              },
+              {
+                "label": "Gree",
+                "value": "Gree",
+                "count": 1
+              },
+              {
+                "label": "HUlter",
+                "value": "HUlter",
+                "count": 1
+              },
+              {
+                "label": "Hisense",
+                "value": "Hisense",
+                "count": 1
+              },
+              {
+                "label": "Hitachi",
+                "value": "Hitachi",
+                "count": 3
+              },
+              {
+                "label": "LG",
+                "value": "LG",
+                "count": 2
+              },
+              {
+                "label": "Philco",
+                "value": "Philco",
+                "count": 1
+              },
+              {
+                "label": "Springer Midea",
+                "value": "Springer Midea",
+                "count": 2
+              }
+            ]
+          },
+          {
+            "label": "Capacidade em Litros",
+            "attribute_code": "ec_capacidadelitros",
+            "count": 2,
+            "options": [
+              {
+                "label": "207 Litros",
+                "value": "207 Litros",
+                "count": 1
+              },
+              {
+                "label": "334 L",
+                "value": "334 L",
+                "count": 1
+              }
+            ]
+          },
+          {
+            "label": "Classificação Energética",
+            "attribute_code": "ec_classificacaoenergetica",
+            "count": 1,
+            "options": [
+              {
+                "label": "A",
+                "value": "A",
+                "count": 17
+              }
+            ]
+          },
+          {
+            "label": "Controle Remoto",
+            "attribute_code": "ec_controleremoto",
+            "count": 2,
+            "options": [
+              {
+                "label": "Não",
+                "value": "Não",
+                "count": 1
+              },
+              {
+                "label": "Sim",
+                "value": "Sim",
+                "count": 14
+              }
+            ]
+          }
+        ],
+        selectedOptions: {},
+        init() {
+          // Initialize selectedOptions structure
+          this.selectedOptions = Object.fromEntries(
+            this.filters.map(filter => [filter.attribute_code, []])
+          );
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
