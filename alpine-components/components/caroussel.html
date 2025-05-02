@@ -1,0 +1,232 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main>
+    <div x-data="initSlider({
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      autoplay: true,
+      autoplayTime: 3000
+  })" x-init="init()" class="flex w-full flex-col relative">
+
+      <ul x-ref="slider" class="flex w-full snap-x snap-mandatory overflow-x-scroll" style="-ms-overflow-style: none; scrollbar-width: none;">
+        <li class="flex w-1/3 shrink-0 snap-start flex-col items-center justify-center p-2" role="option">
+          <div class="rounded-lg shadow-sm mt-2 w-full overflow-hidden aspect-square bg-gray-200">
+            <img class="w-full h-full" src="https://picsum.photos/400/400?random=1" alt="placeholder image">
+          </div>
+        </li>
+
+        <li class="flex w-1/3 shrink-0 snap-start flex-col items-center justify-center p-2" role="option">
+          <div class="rounded-lg shadow-sm mt-2 w-full overflow-hidden aspect-square bg-gray-200">
+            <img class="w-full h-full" src="https://picsum.photos/400/400?random=2" alt="placeholder image">
+          </div>
+        </li>
+
+        <li class="flex w-1/3 shrink-0 snap-start flex-col items-center justify-center p-2" role="option">
+          <div class="rounded-lg shadow-sm mt-2 w-full overflow-hidden aspect-square bg-gray-200">
+            <img class="w-full h-full" src="https://picsum.photos/400/400?random=3" alt="placeholder image">
+          </div>
+        </li>
+
+        <li class="flex w-1/3 shrink-0 snap-start flex-col items-center justify-center p-2" role="option">
+          <div class="rounded-lg shadow-sm mt-2 w-full overflow-hidden aspect-square bg-gray-200">
+            <img class="w-full h-full" src="https://picsum.photos/400/400?random=4" alt="placeholder image">
+          </div>
+        </li>
+
+        <li class="flex w-1/3 shrink-0 snap-start flex-col items-center justify-center p-2" role="option">
+          <div class="rounded-lg shadow-sm mt-2 w-full overflow-hidden aspect-square bg-gray-200">
+            <img class="w-full h-full" src="https://picsum.photos/400/400?random=5" alt="placeholder image">
+          </div>
+        </li>
+
+        <li class="flex w-1/3 shrink-0 snap-start flex-col items-center justify-center p-2" role="option">
+          <div class="rounded-lg shadow-sm mt-2 w-full overflow-hidden aspect-square bg-gray-200">
+            <img class="w-full h-full" src="https://picsum.photos/400/400?random=6" alt="placeholder image">
+          </div>
+        </li>
+      </ul>
+
+      <div class="flex items-center gap-4">
+        <button x-on:click="prev" :disabled="!canGoPrev" :class="{ 'opacity-50 cursor-not-allowed': !canGoPrev }">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="size-6 text-gray-800">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"></path>
+          </svg>
+        </button>
+
+        <button x-on:click="next" :disabled="!canGoNext" :class="{ 'opacity-50 cursor-not-allowed': !canGoNext }">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+            stroke="currentColor" class="size-6 text-gray-800">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function initSlider(config = {}) {
+      return {
+        // Configuration
+        slidesToShow: config.slidesToShow || 3,
+        slidesToScroll: config.slidesToScroll || 1,
+        autoplay: config.autoplay ?? true,
+        autoplayTime: config.autoplayTime || 3000,
+
+        // State
+        currentScroll: 0,
+        maxScroll: 0,
+        autoplayInterval: null,
+        slider: null,
+        slides: Array(6).fill(), // Replace with your actual slide data
+
+        // Computed properties
+        get canGoPrev() {
+          return this.currentScroll > 0;
+        },
+        get canGoNext() {
+          return this.currentScroll < this.maxScroll;
+        },
+        get scrollAmount() {
+          if (this.slidesToScroll === 'visible') {
+            return this.slidesToShow;
+          }
+          return Math.min(this.slidesToScroll, this.slidesToShow);
+        },
+
+        init() {
+          this.slider = this.$refs.slider;
+          this.calculateDimensions();
+
+          // Responsive handling
+          window.addEventListener('resize', () => this.calculateDimensions());
+
+          // Start autoplay if enabled
+          if (this.autoplay) {
+            this.startAutoplay();
+          }
+        },
+
+        calculateDimensions() {
+          this.maxScroll = this.slider.scrollWidth - this.slider.clientWidth;
+          this.slides.forEach((_, index) => {
+            this.slider.children[index].style.width =
+              `${100 / this.slidesToShow}%`;
+          });
+        },
+
+        next() {
+            this.pauseAutoplay();
+
+            const slideWidth = this.slider.clientWidth / this.slidesToShow;
+            const scrollOffset = slideWidth * this.scrollAmount;
+
+            this.to((current) => {
+                const newPosition = current + scrollOffset;
+                return Math.min(newPosition, this.maxScroll);
+            });
+
+            this.resumeAutoplay();
+        },
+
+        prev() {
+            this.pauseAutoplay();
+
+            const slideWidth = this.slider.clientWidth / this.slidesToShow;
+            const scrollOffset = slideWidth * this.scrollAmount;
+
+            this.to((current) => {
+                const newPosition = current - scrollOffset;
+                return Math.max(newPosition, 0);
+            });
+
+            this.resumeAutoplay();
+        },
+
+        to(strategy) {
+          const newPosition = strategy(this.slider.scrollLeft);
+
+          this.slider.scrollTo({
+            left: newPosition,
+            behavior: 'smooth'
+          });
+
+          // Update state after scroll
+          setTimeout(() => {
+            this.currentScroll = this.slider.scrollLeft;
+            this.maxScroll = this.slider.scrollWidth - this.slider.clientWidth;
+          }, 500);
+        },
+
+        startAutoplay() {
+            this.clearAutoplay(); // Clear any existing interval
+            this.autoplayInterval = setInterval(() => {
+                this.handleAutoplayTransition();
+            }, this.autoplayTime);
+        },
+
+        handleAutoplayTransition() {
+            if (this.canGoNext) {
+                this.next();
+            } else {
+                // When reaching end, reset to start and pause briefly
+                this.pauseAutoplay();
+                this.goToSlide(0).then(() => {
+                    // Wait for transition + 500ms before restarting
+                    setTimeout(() => this.startAutoplay(), 500);
+                });
+            }
+        },
+
+        goToSlide(index) {
+            return new Promise(resolve => {
+                const slideWidth = this.slider.clientWidth / this.slidesToShow;
+                const newPosition = index * slideWidth;
+
+                this.slider.scrollTo({
+                    left: newPosition,
+                    behavior: 'smooth'
+                });
+
+                // Wait for scroll to complete
+                setTimeout(() => {
+                    this.currentScroll = this.slider.scrollLeft;
+                    this.maxScroll = this.slider.scrollWidth - this.slider.clientWidth;
+                    resolve();
+                }, 500);
+            });
+        },
+
+        clearAutoplay() {
+            clearInterval(this.autoplayInterval);
+            this.autoplayInterval = null;
+        },
+
+        pauseAutoplay() {
+            this.clearAutoplay();
+        },
+
+        resumeAutoplay() {
+            if (this.autoplay && !this.autoplayInterval) {
+                this.startAutoplay();
+            }
+        },
+      }
+    }
+  </script>
+</body>
+
+</html>
