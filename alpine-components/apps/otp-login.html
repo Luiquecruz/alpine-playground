@@ -1,0 +1,100 @@
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main x-data="otpForm()">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full sm:w-96">
+      <h2 class="text-2xl font-semibold text-center mb-4">OTP Login</h2>
+      <form @submit.prevent="submitForm" class="flex flex-col items-center">
+        <div class="flex mb-4 space-x-2">
+          <template x-for="(_, index) in otp" :key="index">
+            <input
+              type="text"
+              maxlength="1"
+              x-model="otp[index]"
+              @input="handleInput(index, $event)"
+              @keydown.backspace="handleBackspace(index, $event)"
+              @paste="handlePaste($event)"
+              class="w-12 h-12 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              :class="{ 'border-red-500 focus:ring-red-500': error }"
+              x-ref="otpInputs" />
+          </template>
+        </div>
+
+        <p x-show="error" class="text-red-500 text-center mb-4">Please fill in all OTP fields.</p>
+
+        <button type="submit" class="mt-6 px-4 py-2 bg-gray-800 rounded text-md text-white w-full hover:bg-gray-700">
+          Verify OTP
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    function otpForm() {
+      return {
+        otp: Array(6).fill(''),
+        error: false,
+
+        handleInput(index, event) {
+          this.error = false;
+          const value = event.target.value;
+
+          if (value.length === 1 && index < this.otp.length - 1) {
+            const nextInput = event.target.nextElementSibling;
+            nextInput?.focus();
+          }
+        },
+
+        handleBackspace(index, event) {
+          if (event.key === 'Backspace' && !this.otp[index] && index > 0) {
+            const prevInput = event.target.previousElementSibling;
+            prevInput?.focus();
+          }
+        },
+
+        handlePaste(event) {
+          event.preventDefault();
+          const pasteData = event.clipboardData.getData('text').trim();
+          const numbers = pasteData.replace(/\D/g, '').split('');
+
+          if (numbers.length >= this.otp.length) {
+            this.otp = numbers.slice(0, this.otp.length);
+
+            this.$nextTick(() => {
+              const lastInput = this.$refs.otpInputs[this.otp.length - 1];
+              lastInput?.focus();
+            });
+          }
+        },
+
+        submitForm() {
+          const isValid = this.otp.every(digit => digit.trim() !== '');
+
+          if (!isValid) {
+            this.error = true;
+            const emptyIndex = this.otp.findIndex(digit => !digit.trim());
+            this.$refs.otpInputs[emptyIndex]?.focus();
+            return;
+          }
+
+          // form submission logic goes here
+          alert('OTP Submitted: ' + this.otp.join(''));
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>
