@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="../config.css">
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body>
+  <header>
+    <a href="../index.html"> ⬅️ back </a>
+  </header>
+
+  <main class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white shadow-lg rounded-lg p-6 w-full max-w-md" x-data="cityCepAutocomplete()" x-init>
+      <h1 class="text-xl font-semibold text-gray-800 mb-4">Search CEP by City</h1>
+
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-1">City</label>
+        <input type="text" x-model="city" @input="onCityInput" list="cities-datalist" placeholder="Enter the city"
+          class="w-full px-4 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <datalist id="cities-datalist">
+          <template x-for="item in suggestions" :key="item.name + item.uf">
+            <option :value="`${item.name} - ${item.uf}`"></option>
+          </template>
+        </datalist>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-1">CEP</label>
+        <input type="text" x-model="cep" placeholder="CEP will be automatically filled" readonly
+          class="w-full px-4 py-2 border bg-gray-100 rounded-md shadow-sm text-gray-600">
+      </div>
+
+      <small class="text-xs text-gray-500 mt-2" x-text="message"></small>
+    </div>
+  </main>
+
+  <script>
+    function cityCepAutocomplete() {
+      return {
+        city: '',
+        cep: '',
+        suggestions: [],
+        message: '',
+        cache: {
+          cities: {},
+          ceps: {}
+        },
+        debounceTimer: null,
+
+        // No explicit init() function needed here, Alpine handles it.
+
+        normalizeString(str) {
+          return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        },
+
+        onCityInput() {
+          clearTimeout(this.debounceTimer);
+          this.debounceTimer = setTimeout(async () => {
+            const term = this.normalizeString(this.city.trim());
+
+            if (term.length < 3) return;
+
+            if (this.cache.cities[term]) {
+              this.suggestions = this.cache.cities[term];
+              return;
+            }
+
+            try {
+              const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/municipios`);
+              const allMunicipalities = await response.json();
+
+              const filteredCities = allMunicipalities
+                .filter(m => this.normalizeString(m.nome).includes(term))
+                .map(m => ({ name: m.nome, uf: m.microrregiao.mesorregiao.UF.sigla }));
+
+              this.cache.cities[term] = filteredCities.slice(0, 50);
+              this.suggestions = this.cache.cities[term];
+            } catch (error) {
+              console.error("Error searching for cities:", error);
+              this.showFeedback("Search error. Please try again.");
+            }
+          }, 250); // Reduced debounce time for better responsiveness
+        },
+
+        async searchCityCep(uf, city) {
+          const cacheKey = `${uf}-${city}`;
+
+          if (this.cache.ceps[cacheKey]) {
+            return this.cache.ceps[cacheKey];
+          }
+
+          const terms = [
+            "Rua", "centro", "prefeitura", "praça", "igreja matriz",
+            "avenida principal"
+          ];
+
+          for (const term of terms) {
+            try {
+              const url = `https://viacep.com.br/ws/${uf}/${city}/${term}/json/`;
+              const response = await fetch(url);
+              const data = await response.json();
+
+              if (Array.isArray(data)) {
+                const validResult = data.find(item => item.cep && !item.erro);
+                if (validResult) {
+                  const cep = validResult.cep.replace("-", "");
+                  this.cache.ceps[cacheKey] = cep;
+                  return cep;
+                }
+              }
+            } catch (error) {
+              console.error(`Failure with "${term}":`, error);
+            }
+          }
+
+          return null;
+        },
+
+        async onCitySelected() {
+          const [city, uf] = this.city.split(' - '); // Split by ' - ' to correctly get city and UF
+
+          if (!city || !uf) return;
+
+          this.showFeedback("Searching for CEP...");
+
+          try {
+            const cep = await this.searchCityCep(uf, city);
+
+            if (cep) {
+              this.cep = cep;
+              this.showFeedback("CEP found!"); // Add success message here
+            } else {
+              this.showFeedback("CEP not found. Try another term.");
+            }
+          } catch (error) {
+            console.error("Error searching for CEP:", error);
+            this.showFeedback("Search error. Please try again.");
+          }
+        },
+
+        showFeedback(msg) {
+          this.message = msg;
+        }
+      };
+    }
+
+    document.addEventListener("alpine:init", () => {
+      Alpine.data("cityCepAutocomplete", cityCepAutocomplete);
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const inputCity = document.querySelector('input[list="cities-datalist"]');
+      inputCity.addEventListener("change", () => {
+        // Ensure the Alpine component context is correctly accessed
+        const component = Alpine.closestDataStack(inputCity)[0];
+        component.onCitySelected();
+      });
+    });
+  </script>
+</body>
+
+</html>
