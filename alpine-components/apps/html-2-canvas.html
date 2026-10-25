@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Imagem</title>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div x-data="imageEditor()" x-init="init()" class="container mx-auto p-2 sm:p-5 max-w-[1400px]">
+        <div class="grid grid-cols-1 lg:grid-cols-[250px_1fr_400px] gap-3 sm:gap-5">
+
+            <!-- Gallery Section -->
+            <div class="bg-white p-3 sm:p-5 rounded-lg shadow-md max-h-[200px] lg:max-h-[90vh] overflow-y-auto">
+                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-5 text-gray-800">Galeria</h2>
+                <div class="grid grid-cols-3 lg:grid-cols-1 gap-2 sm:gap-4">
+                    <template x-for="(template, index) in templates" :key="index">
+                        <div
+                            @click="selectTemplate(index)"
+                            :class="{'border-green-500 shadow-lg shadow-green-200': selectedTemplate === index}"
+                            class="relative border-3 border-transparent rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:border-green-500 hover:scale-105">
+                            <img :src="template.src" :alt="template.label" class="w-full aspect-[9/16] object-cover" crossorigin="anonymous">
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white p-1.5 sm:p-2.5 text-xs font-medium">
+                                <span x-text="template.label"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="bg-white p-3 sm:p-5 rounded-lg shadow-md">
+                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-5 text-gray-800">Preview (1080x1920)</h2>
+                <div class="flex justify-center">
+                    <div
+                        id="template"
+                        x-ref="template"
+                        class="relative bg-white border border-gray-300 rounded overflow-hidden"
+                        :style="{
+                            width: previewWidth + 'px',
+                            height: previewHeight + 'px'
+                        }">
+                        <img
+                            id="template-image"
+                            :src="templates[selectedTemplate].src"
+                            alt="Template"
+                            class="w-full h-full object-contain"
+                            crossorigin="anonymous">
+
+                        <!-- Background Rectangle -->
+                        <div
+                            x-show="background.enabled"
+                            id="background-rect"
+                            x-ref="backgroundRect"
+                            @mousedown="startDrag($event, 'background')"
+                            @touchstart="startDrag($event, 'background')"
+                            :class="{'shadow-lg': dragging === 'background'}"
+                            :style="{
+                                top: (backgroundPosition.y * scale) + 'px',
+                                left: (backgroundPosition.x * scale) + 'px',
+                                maxWidth: '150%',
+                                width: (background.width * scale) + 'px',
+                                height: (background.height * scale) + 'px',
+                                backgroundColor: background.color,
+                                opacity: background.opacity / 100,
+                                filter: background.blur > 0 ? `blur(${background.blur * scale}px)` : 'none'
+                            }"
+                            class="absolute select-none cursor-move transition-shadow touch-none">
+                        </div>
+
+                        <!-- Phone Text -->
+                        <div
+                            id="phone-text"
+                            x-ref="phoneText"
+                            @mousedown="startDrag($event, 'phone')"
+                            @touchstart="startDrag($event, 'phone')"
+                            :class="{'shadow-lg': dragging === 'phone'}"
+                            :style="{
+                                top: (phonePosition.y * scale) + 'px',
+                                left: (phonePosition.x * scale) + 'px',
+                                color: phone.color,
+                                fontSize: (phone.size * scale) + 'px',
+                                fontWeight: phone.bold ? 'bold' : 'normal',
+                                textDecoration: phone.underline ? 'underline' : 'none',
+                                padding: (2.5 * scale) + 'px'
+                            }"
+                            class="absolute select-none cursor-move transition-shadow whitespace-pre-wrap break-words touch-none"
+                            x-text="phone.text">
+                        </div>
+
+                        <!-- Name Text -->
+                        <div
+                            id="name-text"
+                            x-ref="nameText"
+                            @mousedown="startDrag($event, 'name')"
+                            @touchstart="startDrag($event, 'name')"
+                            :class="{'shadow-lg': dragging === 'name'}"
+                            :style="{
+                                top: (namePosition.y * scale) + 'px',
+                                left: (namePosition.x * scale) + 'px',
+                                color: name.color,
+                                fontSize: (name.size * scale) + 'px',
+                                fontWeight: name.bold ? 'bold' : 'normal',
+                                textDecoration: name.underline ? 'underline' : 'none',
+                                padding: (2.5 * scale) + 'px'
+                            }"
+                            class="absolute select-none cursor-move transition-shadow whitespace-pre-wrap break-words touch-none"
+                            x-text="name.text">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls Section -->
+            <div class="bg-white p-3 sm:p-5 rounded-lg shadow-md max-h-[90vh] overflow-y-auto controls-scroll">
+                <h2 class="text-xl font-semibold mb-5 text-gray-800">Editar Informações</h2>
+
+                <!-- Phone Controls -->
+                <div class="mb-5 pb-5 border-b border-gray-200">
+                    <h3 class="mb-2.5 text-gray-600 text-base">Telefone</h3>
+                    <input
+                        type="text"
+                        x-model="phone.text"
+                        placeholder="(00) 00000-0000"
+                        class="w-full p-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-green-500">
+
+                    <div class="grid grid-cols-2 gap-2.5 mt-2.5">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-2">Tamanho</label>
+                            <input
+                                type="range"
+                                x-model="phone.size"
+                                min="20"
+                                max="100"
+                                class="w-full mt-1">
+                            <div class="text-xs text-gray-600 text-center mt-0.5" x-text="phone.size + 'px'"></div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-2">Cor</label>
+                            <input
+                                type="color"
+                                x-model="phone.color"
+                                class="w-full h-10 border border-gray-300 rounded cursor-pointer mt-1">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5 mt-2.5">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-2">Estilo</label>
+                            <div class="flex gap-1.5 mt-1">
+                                <button
+                                    @click="phone.bold = !phone.bold"
+                                    :class="{'bg-green-500 text-white border-green-500': phone.bold}"
+                                    class="flex-1 p-2 border border-gray-300 rounded bg-white text-xs transition-all hover:border-green-500">
+                                    B
+                                </button>
+                                <button
+                                    @click="phone.underline = !phone.underline"
+                                    :class="{'bg-green-500 text-white border-green-500': phone.underline}"
+                                    class="flex-1 p-2 border border-gray-300 rounded bg-white text-xs transition-all hover:border-green-500">
+                                    U
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Name Controls -->
+                <div class="mb-5 pb-5 border-b border-gray-200">
+                    <h3 class="mb-2.5 text-gray-600 text-base">Nome</h3>
+                    <input
+                        type="text"
+                        x-model="name.text"
+                        placeholder="Digite o nome"
+                        class="w-full p-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-green-500">
+
+                    <div class="grid grid-cols-2 gap-2.5 mt-2.5">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-2">Tamanho</label>
+                            <input
+                                type="range"
+                                x-model="name.size"
+                                min="20"
+                                max="100"
+                                class="w-full mt-1">
+                            <div class="text-xs text-gray-600 text-center mt-0.5" x-text="name.size + 'px'"></div>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-2">Cor</label>
+                            <input
+                                type="color"
+                                x-model="name.color"
+                                class="w-full h-10 border border-gray-300 rounded cursor-pointer mt-1">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5 mt-2.5">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-2">Estilo</label>
+                            <div class="flex gap-1.5 mt-1">
+                                <button
+                                    @click="name.bold = !name.bold"
+                                    :class="{'bg-green-500 text-white border-green-500': name.bold}"
+                                    class="flex-1 p-2 border border-gray-300 rounded bg-white text-xs transition-all hover:border-green-500">
+                                    B
+                                </button>
+                                <button
+                                    @click="name.underline = !name.underline"
+                                    :class="{'bg-green-500 text-white border-green-500': name.underline}"
+                                    class="flex-1 p-2 border border-gray-300 rounded bg-white text-xs transition-all hover:border-green-500">
+                                    U
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Background Rectangle Controls -->
+                <div class="mb-5 pb-5 border-b border-gray-200">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <h3 class="text-gray-600 text-base">Fundo Retangular</h3>
+                        <label class="flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                x-model="background.enabled"
+                                class="mr-2">
+                            <span class="text-xs text-gray-600">Ativar</span>
+                        </label>
+                    </div>
+
+                    <div x-show="background.enabled" x-transition>
+                        <div class="grid grid-cols-2 gap-2.5 mt-2.5">
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-2">Largura</label>
+                                <input
+                                    type="range"
+                                    x-model="background.width"
+                                    min="50"
+                                    max="1100"
+                                    class="w-full mt-1">
+                                <div class="text-xs text-gray-600 text-center mt-0.5" x-text="background.width + 'px'"></div>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-2">Altura</label>
+                                <input
+                                    type="range"
+                                    x-model="background.height"
+                                    min="50"
+                                    max="500"
+                                    class="w-full mt-1">
+                                <div class="text-xs text-gray-600 text-center mt-0.5" x-text="background.height + 'px'"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5 mt-2.5">
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-2">Cor</label>
+                                <input
+                                    type="color"
+                                    x-model="background.color"
+                                    class="w-full h-10 border border-gray-300 rounded cursor-pointer mt-1">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-2">Opacidade</label>
+                                <input
+                                    type="range"
+                                    x-model="background.opacity"
+                                    min="0"
+                                    max="100"
+                                    class="w-full mt-1">
+                                <div class="text-xs text-gray-600 text-center mt-0.5" x-text="background.opacity + '%'"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-2.5">
+                            <label class="block text-xs text-gray-600 mb-2">Blur (Desfoque)</label>
+                            <input
+                                type="range"
+                                x-model="background.blur"
+                                min="0"
+                                max="20"
+                                class="w-full mt-1">
+                            <div class="text-xs text-gray-600 text-center mt-0.5" x-text="background.blur + 'px'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Share Message -->
+                <div class="mb-5 pb-5 border-b border-gray-200">
+                    <h3 class="mb-2.5 text-gray-600 text-base">Mensagem de Compartilhamento</h3>
+                    <textarea
+                        x-model="shareMessage"
+                        rows="3"
+                        placeholder="Digite a mensagem para compartilhar..."
+                        class="w-full p-2.5 border border-gray-300 rounded text-sm focus:outline-none focus:border-green-500 resize-none">
+                    </textarea>
+                    <div class="text-xs text-gray-500 mt-1">Esta mensagem será enviada junto com a imagem no WhatsApp</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col gap-2.5 mt-5">
+                    <!-- Download with Format Dropdown -->
+                    <div class="relative" @click.outside="showDownloadMenu = false">
+                        <button
+                            @click="showDownloadMenu = !showDownloadMenu"
+                            class="w-full p-3 bg-green-500 text-white rounded text-sm font-medium transition-all hover:bg-green-600 flex items-center justify-between">
+                            <span>Download Imagem</span>
+                            <svg class="w-4 h-4 transition-transform" :class="{'rotate-180': showDownloadMenu}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div
+                            x-show="showDownloadMenu"
+                            x-transition
+                            class="absolute bottom-full mb-2 left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden z-10">
+                            <button
+                                @click="downloadImage('jpg'); showDownloadMenu = false"
+                                class="w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-200">
+                                <div class="font-medium text-sm text-gray-800">JPG (Recomendado)</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Menor tamanho, ótima qualidade (~200-400KB)</div>
+                            </button>
+                            <button
+                                @click="downloadImage('png'); showDownloadMenu = false"
+                                class="w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-200">
+                                <div class="font-medium text-sm text-gray-800">PNG</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Sem perda de qualidade (~1-2MB)</div>
+                            </button>
+                            <button
+                                @click="downloadImage('webp'); showDownloadMenu = false"
+                                class="w-full p-3 text-left hover:bg-gray-50 transition-colors">
+                                <div class="font-medium text-sm text-gray-800">WebP</div>
+                                <div class="text-xs text-gray-500 mt-0.5">Melhor compressão (~150-300KB)</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button
+                        @click="shareWhatsApp()"
+                        class="w-full p-3 bg-[#25D366] text-white rounded text-sm font-medium transition-all hover:bg-[#1faa52]">
+                        Compartilhar WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function imageEditor() {
+            return {
+                templates: [
+                    { src: 'https://www.dufrio.com.br/media/wysiwyg/slider-mobile-df-midea_1_.jpg', label: 'Dufrio Banner' },
+                    { src: 'https://picsum.photos/id/1015/1080/1920', label: 'Montanhas' },
+                    { src: 'https://picsum.photos/id/1018/1080/1920', label: 'Floresta' },
+                    { src: 'https://picsum.photos/id/1019/1080/1920', label: 'Paisagem' },
+                    { src: 'https://picsum.photos/id/1025/1080/1920', label: 'Cachorro' }
+                ],
+                selectedTemplate: 0,
+                showDownloadMenu: false,
+                previewWidth: 540,
+                previewHeight: 960,
+                scale: 0.5,
+                phone: {
+                    text: '',
+                    size: 48,
+                    color: '#ffffff',
+                    bold: false,
+                    underline: false
+                },
+                name: {
+                    text: '',
+                    size: 36,
+                    color: '#ffffff',
+                    bold: false,
+                    underline: false
+                },
+                background: {
+                    enabled: false,
+                    color: '#000000',
+                    opacity: 50,
+                    blur: 0,
+                    width: 400,
+                    height: 200
+                },
+                backgroundPosition: { x: 100, y: 150 },
+                shareMessage: 'Confira minha imagem personalizada! 📱',
+                phonePosition: { x: 50, y: 100 },
+                namePosition: { x: 50, y: 200 },
+                dragging: null,
+                dragOffset: { x: 0, y: 0 },
+
+                init() {
+                    this.calculatePreviewSize();
+                    window.addEventListener('resize', () => this.calculatePreviewSize());
+                },
+
+                calculatePreviewSize() {
+                    const maxWidth = window.innerWidth < 640 ? window.innerWidth - 40 :
+                                    window.innerWidth < 1024 ? window.innerWidth - 60 : 540;
+                    const maxHeight = window.innerHeight < 768 ? window.innerHeight * 0.6 : 960;
+
+                    const targetRatio = 1080 / 1920; // 9:16
+
+                    let width = maxWidth;
+                    let height = width / targetRatio;
+
+                    if (height > maxHeight) {
+                        height = maxHeight;
+                        width = height * targetRatio;
+                    }
+
+                    this.previewWidth = Math.floor(width);
+                    this.previewHeight = Math.floor(height);
+                    this.scale = this.previewWidth / 1080;
+
+                    console.log(`Preview: ${this.previewWidth}x${this.previewHeight}, Scale: ${this.scale.toFixed(3)}`);
+                },
+
+                selectTemplate(index) {
+                    this.selectedTemplate = index;
+                },
+
+                startDrag(e, type) {
+                    e.preventDefault();
+                    this.dragging = type;
+
+                    // Support both mouse and touch
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    let element;
+                    if (type === 'phone') {
+                        element = this.$refs.phoneText;
+                    } else if (type === 'name') {
+                        element = this.$refs.nameText;
+                    } else if (type === 'background') {
+                        element = this.$refs.backgroundRect;
+                    }
+
+                    const rect = element.getBoundingClientRect();
+
+                    this.dragOffset = {
+                        x: clientX - rect.left,
+                        y: clientY - rect.top
+                    };
+
+                    const moveHandler = (e) => this.onDrag(e, type);
+                    const upHandler = () => {
+                        this.dragging = null;
+                        document.removeEventListener('mousemove', moveHandler);
+                        document.removeEventListener('mouseup', upHandler);
+                        document.removeEventListener('touchmove', moveHandler);
+                        document.removeEventListener('touchend', upHandler);
+                    };
+
+                    document.addEventListener('mousemove', moveHandler);
+                    document.addEventListener('mouseup', upHandler);
+                    document.addEventListener('touchmove', moveHandler);
+                    document.addEventListener('touchend', upHandler);
+                },
+
+                onDrag(e, type) {
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    const template = this.$refs.template;
+                    const rect = template.getBoundingClientRect();
+
+                    // Calculate position in preview coordinates
+                    const previewX = clientX - rect.left - this.dragOffset.x;
+                    const previewY = clientY - rect.top - this.dragOffset.y;
+
+                    // Convert to final image coordinates (1080x1920)
+                    const finalX = previewX / this.scale;
+                    const finalY = previewY / this.scale;
+
+                    if (type === 'phone') {
+                        this.phonePosition = { x: finalX, y: finalY };
+                    } else if (type === 'name') {
+                        this.namePosition = { x: finalX, y: finalY };
+                    } else if (type === 'background') {
+                        this.backgroundPosition = { x: finalX, y: finalY };
+                    }
+                },
+
+                async generateCanvas() {
+                    // Create canvas at final resolution
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1080;
+                    canvas.height = 1920;
+                    const ctx = canvas.getContext('2d');
+
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, 1080, 1920);
+
+                    // Load and draw image
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = this.templates[this.selectedTemplate].src;
+                    });
+
+                    // Draw image maintaining aspect ratio
+                    const imgRatio = img.width / img.height;
+                    const canvasRatio = 1080 / 1920;
+
+                    let drawWidth, drawHeight, drawX, drawY;
+
+                    if (imgRatio > canvasRatio) {
+                        drawHeight = 1920;
+                        drawWidth = img.width * (1920 / img.height);
+                        drawX = (1080 - drawWidth) / 2;
+                        drawY = 0;
+                    } else {
+                        drawWidth = 1080;
+                        drawHeight = img.height * (1080 / img.width);
+                        drawX = 0;
+                        drawY = (1920 - drawHeight) / 2;
+                    }
+
+                    ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+
+                    // Draw background rectangle if enabled
+                    if (this.background.enabled) {
+                        ctx.save();
+                        ctx.globalAlpha = this.background.opacity / 100;
+                        ctx.fillStyle = this.background.color;
+
+                        if (this.background.blur > 0) {
+                            ctx.filter = `blur(${this.background.blur}px)`;
+                        }
+
+                        ctx.fillRect(
+                            this.backgroundPosition.x,
+                            this.backgroundPosition.y,
+                            this.background.width,
+                            this.background.height
+                        );
+                        ctx.restore();
+                    }
+
+                    // Draw phone text
+                    if (this.phone.text) {
+                        ctx.save();
+                        ctx.fillStyle = this.phone.color;
+                        ctx.font = `${this.phone.bold ? 'bold' : 'normal'} ${this.phone.size}px Arial, sans-serif`;
+                        ctx.textBaseline = 'top';
+
+                        if (this.phone.underline) {
+                            const metrics = ctx.measureText(this.phone.text);
+                            ctx.strokeStyle = this.phone.color;
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(this.phonePosition.x, this.phonePosition.y + this.phone.size + 2);
+                            ctx.lineTo(this.phonePosition.x + metrics.width, this.phonePosition.y + this.phone.size + 2);
+                            ctx.stroke();
+                        }
+
+                        ctx.fillText(this.phone.text, this.phonePosition.x, this.phonePosition.y);
+                        ctx.restore();
+                    }
+
+                    // Draw name text
+                    if (this.name.text) {
+                        ctx.save();
+                        ctx.fillStyle = this.name.color;
+                        ctx.font = `${this.name.bold ? 'bold' : 'normal'} ${this.name.size}px Arial, sans-serif`;
+                        ctx.textBaseline = 'top';
+
+                        if (this.name.underline) {
+                            const metrics = ctx.measureText(this.name.text);
+                            ctx.strokeStyle = this.name.color;
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.moveTo(this.namePosition.x, this.namePosition.y + this.name.size + 2);
+                            ctx.lineTo(this.namePosition.x + metrics.width, this.namePosition.y + this.name.size + 2);
+                            ctx.stroke();
+                        }
+
+                        ctx.fillText(this.name.text, this.namePosition.x, this.namePosition.y);
+                        ctx.restore();
+                    }
+
+                    return canvas;
+                },
+
+                async downloadImage(format) {
+                    try {
+                        const canvas = await this.generateCanvas();
+
+                        const formats = {
+                            jpg: { mimeType: 'image/jpeg', quality: 0.85, ext: 'jpg' },
+                            png: { mimeType: 'image/png', quality: 1, ext: 'png' },
+                            webp: { mimeType: 'image/webp', quality: 0.85, ext: 'webp' }
+                        };
+
+                        const config = formats[format];
+
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `imagem-${Date.now()}.${config.ext}`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+
+                            console.log(`Download ${config.ext.toUpperCase()}: ${(blob.size / 1024).toFixed(2)}KB`);
+                        }, config.mimeType, config.quality);
+                    } catch (error) {
+                        console.error('Erro ao gerar imagem:', error);
+                        alert('Erro ao gerar imagem: ' + error.message);
+                    }
+                },
+
+                async shareWhatsApp() {
+                    let message = this.shareMessage;
+                    if (this.phone.text) message += '\n' + this.phone.text;
+                    if (this.name.text) message += '\n' + this.name.text;
+
+                    try {
+                        const canvas = await this.generateCanvas();
+
+                        canvas.toBlob(async (blob) => {
+                            console.log(`WhatsApp: ${(blob.size / 1024).toFixed(2)}KB`);
+                            await this.shareImageFile(blob, message);
+                        }, 'image/jpeg', 0.80);
+                    } catch (error) {
+                        console.error('Erro ao gerar imagem:', error);
+                        alert('Erro ao gerar imagem: ' + error.message);
+                    }
+                },
+
+                async shareImageFile(blob, message) {
+                    try {
+                        const fileName = `imagem-${Date.now()}.jpg`;
+                        const file = new File([blob], fileName, { type: 'image/jpeg' });
+
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], text: message });
+                            console.log('Compartilhado via Web Share API');
+                        } else {
+                            const blobUrl = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = blobUrl;
+                            link.download = fileName;
+                            link.click();
+
+                            setTimeout(() => {
+                                const text = encodeURIComponent(message + '\n\n(Imagem baixada - anexe manualmente)');
+                                window.open(`https://wa.me/?text=${text}`, '_blank');
+                                URL.revokeObjectURL(blobUrl);
+                            }, 500);
+                        }
+                    } catch (err) {
+                        console.error('Erro ao compartilhar:', err);
+                        if (err.name !== 'AbortError') {
+                            alert('Erro ao compartilhar: ' + err.message);
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>

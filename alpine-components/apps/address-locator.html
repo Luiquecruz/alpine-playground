@@ -52,8 +52,6 @@
         },
         debounceTimer: null,
 
-        // No explicit init() function needed here, Alpine handles it.
-
         normalizeString(str) {
           return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         },
@@ -84,7 +82,7 @@
               console.error("Error searching for cities:", error);
               this.showFeedback("Search error. Please try again.");
             }
-          }, 250); // Reduced debounce time for better responsiveness
+          }, 250);
         },
 
         async searchCityCep(uf, city) {
@@ -122,7 +120,7 @@
         },
 
         async onCitySelected() {
-          const [city, uf] = this.city.split(' - '); // Split by ' - ' to correctly get city and UF
+          const [city, uf] = this.city.split(' - ');
 
           if (!city || !uf) return;
 
@@ -133,7 +131,7 @@
 
             if (cep) {
               this.cep = cep;
-              this.showFeedback("CEP found!"); // Add success message here
+              this.showFeedback("CEP found!");
             } else {
               this.showFeedback("CEP not found. Try another term.");
             }
@@ -156,7 +154,6 @@
     document.addEventListener("DOMContentLoaded", () => {
       const inputCity = document.querySelector('input[list="cities-datalist"]');
       inputCity.addEventListener("change", () => {
-        // Ensure the Alpine component context is correctly accessed
         const component = Alpine.closestDataStack(inputCity)[0];
         component.onCitySelected();
       });
